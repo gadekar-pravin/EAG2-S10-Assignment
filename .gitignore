@@ -10,7 +10,7 @@ wheels/
 /document/
 /faiss_index/
 *.pyc 
-
+*.idea
 
 # Virtual environments
 .venv
