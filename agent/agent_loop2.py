@@ -13,13 +13,36 @@ from mcp_servers.multiMCP import MultiMCP
 GLOBAL_PREVIOUS_FAILURE_STEPS = 3
 
 class AgentLoop:
+    """
+    Manages the main execution loop of the agent.
+    This class orchestrates the interaction between perception, decision-making,
+    and execution of actions (tools), maintaining the session state throughout.
+    """
     def __init__(self, perception_prompt_path: str, decision_prompt_path: str, multi_mcp: MultiMCP, strategy: str = "exploratory"):
+        """
+        Initialize the AgentLoop.
+
+        Args:
+            perception_prompt_path (str): Path to the file containing perception prompts.
+            decision_prompt_path (str): Path to the file containing decision prompts.
+            multi_mcp (MultiMCP): The MultiMCP instance for tool execution.
+            strategy (str, optional): The planning strategy to use. Defaults to "exploratory".
+        """
         self.perception = Perception(perception_prompt_path)
         self.decision = Decision(decision_prompt_path, multi_mcp)
         self.multi_mcp = multi_mcp
         self.strategy = strategy
 
     async def run(self, query: str):
+        """
+        Executes the agent loop for a given user query.
+
+        Args:
+            query (str): The user's query to process.
+
+        Returns:
+            AgentSession: The final state of the agent session after processing the query.
+        """
         session = AgentSession(session_id=str(uuid.uuid4()), original_query=query)
         session_memory= []
         self.log_session_start(session, query)
@@ -48,11 +71,27 @@ class AgentLoop:
         return session
 
     def log_session_start(self, session, query):
+        """
+        Logs the start of a new agent session.
+
+        Args:
+            session (AgentSession): The current session object.
+            query (str): The query initiating the session.
+        """
         print("\n=== LIVE AGENT SESSION TRACE ===")
         print(f"Session ID: {session.session_id}")
         print(f"Query: {query}")
 
     def search_memory(self, query):
+        """
+        Searches the memory for past conversations relevant to the current query.
+
+        Args:
+            query (str): The query to search for in memory.
+
+        Returns:
+            list: A list of matching memory entries.
+        """
         print("Searching Recent Conversation History")
         searcher = MemorySearch()
         results = searcher.search_memory(query)
@@ -65,11 +104,24 @@ class AgentLoop:
         return results
 
     def run_perception(self, query, memory_results, session_memory=None, snapshot_type="user_query", current_plan=None):
+        """
+        Runs the perception module to analyze the current state.
+
+        Args:
+            query (str): The input query or content to analyze.
+            memory_results (list): Results from long-term memory search.
+            session_memory (list, optional): Short-term session memory.
+            snapshot_type (str, optional): The type of snapshot (e.g., "user_query", "step_result"). Defaults to "user_query".
+            current_plan (list, optional): The current plan text.
+
+        Returns:
+            dict: The result from the perception module.
+        """
         combined_memory = (memory_results or []) + (session_memory or [])
         perception_input = self.perception.build_perception_input(
-            raw_input=query, 
-            memory=combined_memory, 
-            current_plan=current_plan, 
+            raw_input=query,
+            memory=combined_memory,
+            current_plan=current_plan,
             snapshot_type=snapshot_type
         )
         perception_result = self.perception.run(perception_input)
@@ -78,6 +130,13 @@ class AgentLoop:
         return perception_result
 
     def handle_perception_completion(self, session, perception_result):
+        """
+        Updates the session when perception determines the goal is achieved.
+
+        Args:
+            session (AgentSession): The current session.
+            perception_result (dict): The result from the perception module indicating success.
+        """
         print("\n✅ Perception fully answered the query.")
         session.state.update({
             "original_goal_achieved": True,
@@ -89,6 +148,16 @@ class AgentLoop:
         live_update_session(session)
 
     def make_initial_decision(self, query, perception_result):
+        """
+        Calls the decision module to generate the initial plan.
+
+        Args:
+            query (str): The original user query.
+            perception_result (dict): The result from the initial perception.
+
+        Returns:
+            dict: The decision output containing the plan and first step.
+        """
         decision_input = {
             "plan_mode": "initial",
             "planning_strategy": self.strategy,
@@ -99,6 +168,15 @@ class AgentLoop:
         return decision_output
 
     def create_step(self, decision_output):
+        """
+        Creates a Step object from the decision output.
+
+        Args:
+            decision_output (dict): The output from the decision module.
+
+        Returns:
+            Step: The created Step object.
+        """
         return Step(
             index=decision_output["step_index"],
             description=decision_output["description"],
@@ -108,6 +186,17 @@ class AgentLoop:
         )
 
     async def execute_step(self, step, session, session_memory):
+        """
+        Executes a single step in the plan.
+
+        Args:
+            step (Step): The step to execute.
+            session (AgentSession): The current session.
+            session_memory (list): The session memory to update on failure.
+
+        Returns:
+            Step: The executed step object with results, or None if the step concludes the session.
+        """
         print(f"\n[Step {step.index}] {step.description}")
 
         if step.type == "CODE":
@@ -162,6 +251,17 @@ class AgentLoop:
             return None
 
     def evaluate_step(self, step, session, query):
+        """
+        Evaluates the result of a step execution and determines the next action.
+
+        Args:
+            step (Step): The executed step.
+            session (AgentSession): The current session.
+            query (str): The original user query.
+
+        Returns:
+            Step: The next step to execute, or None if the session should end.
+        """
         if step.perception.original_goal_achieved:
             print("\n✅ Goal achieved.")
             session.mark_complete(step.perception)
@@ -189,6 +289,17 @@ class AgentLoop:
             return step
 
     def get_next_step(self, session, query, step):
+        """
+        Determines the next step in the plan or asks for a new plan step if needed.
+
+        Args:
+            session (AgentSession): The current session.
+            query (str): The original user query.
+            step (Step): The current step.
+
+        Returns:
+            Step: The next step object, or None if no more steps are available.
+        """
         next_index = step.index + 1
         total_steps = len(session.plan_versions[-1]["plan_text"])
         if next_index < total_steps:

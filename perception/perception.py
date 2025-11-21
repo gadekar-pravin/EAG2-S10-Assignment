@@ -12,7 +12,19 @@ api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
 class Perception:
+    """
+    Handles the perception phase of the agent's operation.
+    Uses a GenAI model to analyze input, context, and memory to form a structured understanding.
+    """
     def __init__(self, perception_prompt_path: str, api_key: str | None = None, model: str = "gemini-2.0-flash"):
+        """
+        Initialize the Perception module.
+
+        Args:
+            perception_prompt_path (str): Path to the perception prompt template.
+            api_key (str | None): API key for the GenAI service.
+            model (str): Model name to use.
+        """
         load_dotenv()
         self.api_key = api_key or os.getenv("GEMINI_API_KEY")
         if not self.api_key:
@@ -21,6 +33,18 @@ class Perception:
         self.perception_prompt_path = perception_prompt_path
 
     def build_perception_input(self, raw_input: str, memory: list, current_plan = "", snapshot_type: str = "user_query") -> dict:
+        """
+        Constructs the input dictionary for the perception model.
+
+        Args:
+            raw_input (str): The raw input string (e.g., user query or tool output).
+            memory (list): List of memory excerpts relevant to the input.
+            current_plan (str): The current plan text (if any).
+            snapshot_type (str): The type of snapshot ("user_query" or "step_result").
+
+        Returns:
+            dict: A dictionary structured for the perception model prompt.
+        """
         if memory:
             memory_excerpt = {
                 f"memory_{i+1}": {
@@ -43,9 +67,17 @@ class Perception:
             "schema_version": 1,
             "current_plan" : current_plan or "Inain Query Mode, plan not created"
         }
-    
+
     def run(self, perception_input: dict) -> dict:
-        """Run perception on given input using the specified prompt file."""
+        """
+        Runs the perception analysis using the configured GenAI model.
+
+        Args:
+            perception_input (dict): The input data for the perception process.
+
+        Returns:
+            dict: A dictionary containing the structured perception output.
+        """
         prompt_template = Path(self.perception_prompt_path).read_text(encoding="utf-8")
         full_prompt = f"{prompt_template.strip()}\n\n```json\n{json.dumps(perception_input, indent=2)}\n```"
 
@@ -107,5 +139,3 @@ class Perception:
                 "solution_summary": "Not ready yet",
                 "confidence": "0.0"
             }
-
-

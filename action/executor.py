@@ -18,7 +18,17 @@ TIMEOUT_PER_FUNCTION = 500  # seconds
 
 class KeywordStripper(ast.NodeTransformer):
     """Rewrite all function calls to remove keyword args and keep only values as positional."""
+
     def visit_Call(self, node):
+        """
+        Visits a Call node and transforms keyword arguments into positional arguments.
+
+        Args:
+            node (ast.Call): The AST node representing a function call.
+
+        Returns:
+            ast.Call: The modified AST node with keyword arguments removed.
+        """
         self.generic_visit(node)
         if node.keywords:
             # Convert all keyword arguments into positional args (discard names)
@@ -32,10 +42,27 @@ class KeywordStripper(ast.NodeTransformer):
 # AST TRANSFORMER: auto-await known async MCP tools
 # ───────────────────────────────────────────────────────────────
 class AwaitTransformer(ast.NodeTransformer):
+    """AST Transformer to automatically add 'await' to known async function calls."""
+
     def __init__(self, async_funcs):
+        """
+        Initialize the AwaitTransformer.
+
+        Args:
+            async_funcs (set): A set of names of functions that should be awaited.
+        """
         self.async_funcs = async_funcs
 
     def visit_Call(self, node):
+        """
+        Visits a Call node and adds 'await' if the function is in the async_funcs set.
+
+        Args:
+            node (ast.Call): The AST node representing a function call.
+
+        Returns:
+            ast.AST: The modified AST node (Await if applicable, otherwise original node).
+        """
         self.generic_visit(node)
         if isinstance(node.func, ast.Name) and node.func.id in self.async_funcs:
             return ast.Await(value=node)
@@ -45,10 +72,29 @@ class AwaitTransformer(ast.NodeTransformer):
 # UTILITY FUNCTIONS
 # ───────────────────────────────────────────────────────────────
 def count_function_calls(code: str) -> int:
+    """
+    Counts the number of function calls in the provided code string.
+
+    Args:
+        code (str): The Python code to analyze.
+
+    Returns:
+        int: The number of function calls found in the code.
+    """
     tree = ast.parse(code)
     return sum(isinstance(node, ast.Call) for node in ast.walk(tree))
 
 def build_safe_globals(mcp_funcs: dict, multi_mcp=None) -> dict:
+    """
+    Builds a dictionary of safe global variables for the sandbox environment.
+
+    Args:
+        mcp_funcs (dict): A dictionary of MCP tool functions available to the code.
+        multi_mcp (Optional[MultiMCP]): The MultiMCP instance for parallel execution support.
+
+    Returns:
+        dict: A dictionary containing safe globals, including built-ins and allowed modules.
+    """
     safe_globals = {
         "__builtins__": {
             k: getattr(builtins, k)
@@ -81,6 +127,20 @@ def build_safe_globals(mcp_funcs: dict, multi_mcp=None) -> dict:
 # MAIN EXECUTOR
 # ───────────────────────────────────────────────────────────────
 async def run_user_code(code: str, multi_mcp) -> dict:
+    """
+    Executes user-provided code in a sandboxed environment.
+
+    This function parses the code, sanitizes it (stripping keyword args, adding awaits),
+    and executes it within a restricted global scope. It handles timeouts and errors.
+
+    Args:
+        code (str): The Python code to execute.
+        multi_mcp (MultiMCP): The MultiMCP instance providing tools.
+
+    Returns:
+        dict: A dictionary containing the execution status ("success" or "error"),
+              the result (or error message), execution timestamp, and total duration.
+    """
     start_time = time.perf_counter()
     start_timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -191,6 +251,16 @@ async def run_user_code(code: str, multi_mcp) -> dict:
 # TOOL WRAPPER
 # ───────────────────────────────────────────────────────────────
 def make_tool_proxy(tool_name: str, mcp):
+    """
+    Creates a proxy function for a specific MCP tool.
+
+    Args:
+        tool_name (str): The name of the tool.
+        mcp (MultiMCP): The MultiMCP instance to call the tool on.
+
+    Returns:
+        callable: An async function that calls the MCP tool.
+    """
     async def _tool_fn(*args):
         return await mcp.function_wrapper(tool_name, *args)
     return _tool_fn

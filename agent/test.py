@@ -3,6 +3,17 @@ from pathlib import Path
 from agentSession import AgentSession, Step, ToolCode, PerceptionSnapshot
 
 # Load JSON results
+# Note: This file seems to be a test script or a playground for testing agent logic.
+# Docstrings added to explain the purpose of the script.
+
+"""
+Test script for simulating agent sessions and verifying plan execution logic.
+
+This script loads pre-defined perception and decision results from JSON files,
+constructs an AgentSession with simulated steps and plans, and then runs a simulation
+of the session to verify state updates and logic flow.
+"""
+
 perception_data = json.loads(Path("perception_results.json").read_text())
 decision_data = json.loads(Path("decision_results.json").read_text())
 

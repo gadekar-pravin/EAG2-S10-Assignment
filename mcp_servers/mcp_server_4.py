@@ -37,31 +37,69 @@ mcp = FastMCP("Mixed 4")
 
 @mcp.tool()
 def add(input: AddInput) -> AddOutput:
-    """Add two numbers. """
+    """
+    Adds two numbers.
+
+    Args:
+        input (AddInput): Object containing 'a' and 'b'.
+
+    Returns:
+        AddOutput: Object containing the 'result'.
+    """
     print("CALLED: add(AddInput) -> AddOutput")
     return AddOutput(result=input.a + input.b)
 
 @mcp.tool()
 def subtract(input: SubtractInput) -> SubtractOutput:
-    """Subtract one number from another."""
+    """
+    Subtracts the second number from the first.
+
+    Args:
+        input (SubtractInput): Object containing 'a' and 'b'.
+
+    Returns:
+        SubtractOutput: Object containing the 'result'.
+    """
     print("CALLED: subtract(SubtractInput) -> SubtractOutput")
     return SubtractOutput(result=input.a - input.b)
 
 @mcp.tool()
 def multiply(a, b):
-    """Multiply two integers."""
+    """
+    Multiplies two numbers.
+
+    Args:
+        a: The first number.
+        b: The second number.
+
+    Returns:
+        The product of a and b.
+    """
     print("CALLED: multiply(a, b) -> result")
     return a * b
 
 @mcp.tool()
 def no_input():
-    """Doesn't take any input."""
+    """
+    A test function that takes no input.
+
+    Returns:
+        str: A greeting string.
+    """
     print("CALLED: multiply(a, b) -> result")
     return "hello"
 
 @mcp.tool()
 def int_list_to_exponential_sum(input: ExpSumInput) -> ExpSumOutput:
-    """Sum exponentials of int list. """
+    """
+    Calculates the sum of exponentials of a list of integers.
+
+    Args:
+        input (ExpSumInput): Object containing 'numbers', a list of integers.
+
+    Returns:
+        ExpSumOutput: Object containing the 'result'.
+    """
     print("CALLED: int_list_to_exponential_sum(ExpSumInput) -> ExpSumOutput")
     result = sum(math.exp(i) for i in input.numbers)  # ✅ FIXED
     return ExpSumOutput(result=result)
@@ -69,7 +107,15 @@ def int_list_to_exponential_sum(input: ExpSumInput) -> ExpSumOutput:
 
 @mcp.tool()
 def strings_to_chars_to_int(input: StringsToIntsInput) -> StringsToIntsOutput:
-    """Convert characters to ASCII values. """
+    """
+    Converts a string to a list of ASCII values.
+
+    Args:
+        input (StringsToIntsInput): Object containing 'string'.
+
+    Returns:
+        StringsToIntsOutput: Object containing 'ascii_values'.
+    """
     print("CALLED: strings_to_chars_to_int(StringsToIntsInput) -> StringsToIntsOutput")
     ascii_values = [ord(char) for char in input.string]
     return StringsToIntsOutput(ascii_values=ascii_values)

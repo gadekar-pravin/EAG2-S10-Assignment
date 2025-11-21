@@ -81,3 +81,9 @@ response = client.models.generate_content(
 
 raw = response.text.strip()
 print(raw)
+
+"""
+This script is used to test and verify the prompts sent to the LLM.
+It loads a prompt template from a file, appends a sample JSON input,
+and sends the request to the Google Gemini API to observe the response.
+"""

@@ -6,10 +6,29 @@ from rapidfuzz import fuzz
 
 
 class MemorySearch:
+    """
+    Searches through session logs (memory) to find past queries similar to the current user query.
+    """
     def __init__(self, logs_path: str = "memory/session_logs"):
+        """
+        Initialize the MemorySearch.
+
+        Args:
+            logs_path (str): Path to the directory containing session logs.
+        """
         self.logs_path = Path(logs_path)
 
     def search_memory(self, user_query: str, top_k: int = 3) -> List[Dict]:
+        """
+        Search memory for the top K most similar past queries.
+
+        Args:
+            user_query (str): The current user query to match against.
+            top_k (int): The number of top matches to return.
+
+        Returns:
+            List[Dict]: A list of the top K matching memory entries.
+        """
         memory_entries = self._load_queries()
         scored_results = []
 
@@ -24,6 +43,12 @@ class MemorySearch:
         return [match[1] for match in top_matches]
 
     def _load_queries(self) -> List[Dict]:
+        """
+        Loads queries from all JSON log files in the logs directory.
+
+        Returns:
+            List[Dict]: A list of extracted memory entries.
+        """
         memory_entries = []
         all_json_files = list(self.logs_path.rglob("*.json"))
         print(f"🔍 Found {len(all_json_files)} JSON file(s) in '{self.logs_path}'")
@@ -55,6 +80,14 @@ class MemorySearch:
         return memory_entries
 
     def _extract_entry(self, obj: dict, file_name: str, memory_entries: List[Dict]):
+        """
+        Recursively extracts relevant memory entries from a JSON object.
+
+        Args:
+            obj (dict): The JSON object to search.
+            file_name (str): The name of the file being processed.
+            memory_entries (List[Dict]): The list to append found entries to.
+        """
         original_obj = obj  # keep top-level reference
 
         def recursive_find(obj: dict) -> dict | None:

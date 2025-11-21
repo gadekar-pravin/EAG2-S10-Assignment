@@ -14,7 +14,25 @@ api_key = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=api_key)
 
 class Decision:
+    """
+    Handles decision-making processes using a Generative AI model.
+
+    This class constructs prompts, interacts with the AI model, and parses the response
+    to generate an execution plan for the agent.
+    """
     def __init__(self, decision_prompt_path: str, multi_mcp: MultiMCP, api_key: str | None = None, model: str = "gemini-2.0-flash",  ):
+        """
+        Initialize the Decision module.
+
+        Args:
+            decision_prompt_path (str): Path to the decision prompt template.
+            multi_mcp (MultiMCP): The MultiMCP instance containing tool definitions.
+            api_key (str | None): The API key for the GenAI service. Defaults to environment variable.
+            model (str): The model name to use. Defaults to "gemini-2.0-flash".
+
+        Raises:
+            ValueError: If the GEMINI_API_KEY is not found.
+        """
         load_dotenv()
         self.decision_prompt_path = decision_prompt_path
         self.multi_mcp = multi_mcp
@@ -23,9 +41,21 @@ class Decision:
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found in environment or explicitly provided.")
         self.client = genai.Client(api_key=self.api_key)
-        
+
 
     def run(self, decision_input: dict) -> dict:
+        """
+        Runs the decision-making process.
+
+        Constructs a prompt incorporating the decision input and available tools,
+        sends it to the AI model, and processes the response into a structured plan.
+
+        Args:
+            decision_input (dict): Input data for the decision process (e.g., query, perception).
+
+        Returns:
+            dict: A dictionary containing the plan, steps, and other decision metadata.
+        """
         prompt_template = Path(self.decision_prompt_path).read_text(encoding="utf-8")
         function_list_text = self.multi_mcp.tool_description_wrapper()
         tool_descriptions = "\n".join(f"- `{desc.strip()}`" for desc in function_list_text)
@@ -107,8 +137,3 @@ class Decision:
                 "plan_text": ["Step 0: Exception occurred while processing LLM response."],
                 "raw_text": raw_text[:1000]
             }
-
-
-
-
-

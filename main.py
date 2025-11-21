@@ -16,6 +16,12 @@ Type 'exit' or 'quit' to leave.
 
 
 async def interactive() -> None:
+    """
+    Runs the interactive agent session.
+
+    This function initializes the MultiMCP servers, sets up the agent loop,
+    and enters a loop to accept user queries and display the agent's responses.
+    """
     print(BANNER)
     print("Loading MCP Servers...")
     with open("config/mcp_server_config.yaml", "r") as f:
