@@ -13,7 +13,16 @@ MODELS_JSON = ROOT / "config" / "models.json"
 PROFILE_YAML = ROOT / "config" / "profiles.yaml"
 
 class ModelManager:
+    """
+    Manages interactions with various LLM providers (e.g., Gemini, Ollama).
+    """
     def __init__(self):
+        """
+        Initialize the ModelManager.
+
+        Loads configuration from 'config/models.json' and 'config/profiles.yaml'.
+        Initializes the appropriate client based on the configured model type.
+        """
         self.config = json.loads(MODELS_JSON.read_text())
         self.profile = yaml.safe_load(PROFILE_YAML.read_text())
 
@@ -27,6 +36,18 @@ class ModelManager:
             self.client = genai.Client(api_key=api_key)
 
     async def generate_text(self, prompt: str) -> str:
+        """
+        Generates text using the configured LLM.
+
+        Args:
+            prompt (str): The input prompt for the model.
+
+        Returns:
+            str: The generated text response.
+
+        Raises:
+            NotImplementedError: If the configured model type is not supported.
+        """
         if self.model_type == "gemini":
             return self._gemini_generate(prompt)
 
@@ -36,6 +57,15 @@ class ModelManager:
         raise NotImplementedError(f"Unsupported model type: {self.model_type}")
 
     def _gemini_generate(self, prompt: str) -> str:
+        """
+        Generates text using the Google Gemini API.
+
+        Args:
+            prompt (str): The input prompt.
+
+        Returns:
+            str: The generated text.
+        """
         response = self.client.models.generate_content(
             model=self.model_info["model"],
             contents=prompt
@@ -51,6 +81,15 @@ class ModelManager:
                 return str(response)
 
     def _ollama_generate(self, prompt: str) -> str:
+        """
+        Generates text using a local Ollama instance.
+
+        Args:
+            prompt (str): The input prompt.
+
+        Returns:
+            str: The generated text.
+        """
         response = requests.post(
             self.model_info["url"]["generate"],
             json={"model": self.model_info["model"], "prompt": prompt, "stream": False}

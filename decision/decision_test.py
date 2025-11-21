@@ -2,6 +2,12 @@ from decision import Decision
 import json
 
 def test_decision():
+    """
+    Tests the Decision module's functionality.
+
+    Initializes the Decision module with a sample input and prompts, runs the decision process,
+    and prints the result to standard output.
+    """
     decision = Decision()
     result = decision.run(
         prompt_path="prompts/decision_prompt.txt",

@@ -45,79 +45,183 @@ mcp = FastMCP("Calculator")
 
 @mcp.tool()
 def add(input: AddInput) -> AddOutput:
-    """Add two numbers. """
+    """
+    Adds two numbers.
+
+    Args:
+        input (AddInput): Object containing 'a' and 'b', the numbers to add.
+
+    Returns:
+        AddOutput: Object containing the 'result' of the addition.
+    """
     print("CALLED: add(AddInput) -> AddOutput")
     return AddOutput(result=input.a + input.b)
 
 @mcp.tool()
 def subtract(input: SubtractInput) -> SubtractOutput:
-    """Subtract one number from another. """
+    """
+    Subtracts the second number from the first.
+
+    Args:
+        input (SubtractInput): Object containing 'a' (minuend) and 'b' (subtrahend).
+
+    Returns:
+        SubtractOutput: Object containing the 'result' of the subtraction.
+    """
     print("CALLED: subtract(SubtractInput) -> SubtractOutput")
     return SubtractOutput(result=input.a - input.b)
 
 @mcp.tool()
 def multiply(input: MultiplyInput) -> MultiplyOutput:
-    """Multiply two integers. """
+    """
+    Multiplies two integers.
+
+    Args:
+        input (MultiplyInput): Object containing 'a' and 'b', the numbers to multiply.
+
+    Returns:
+        MultiplyOutput: Object containing the 'result' of the multiplication.
+    """
     print("CALLED: multiply(MultiplyInput) -> MultiplyOutput")
     return MultiplyOutput(result=input.a * input.b)
 
 @mcp.tool()
 def divide(input: DivideInput) -> DivideOutput:
-    """Divide one number by another. """
+    """
+    Divides the first number by the second.
+
+    Args:
+        input (DivideInput): Object containing 'a' (numerator) and 'b' (denominator).
+
+    Returns:
+        DivideOutput: Object containing the 'result' of the division.
+    """
     print("CALLED: divide(DivideInput) -> DivideOutput")
     return DivideOutput(result=input.a / input.b)
 
 @mcp.tool()
 def power(input: PowerInput) -> PowerOutput:
-    """Compute a raised to the power of b. """
+    """
+    Computes the first number raised to the power of the second.
+
+    Args:
+        input (PowerInput): Object containing 'a' (base) and 'b' (exponent).
+
+    Returns:
+        PowerOutput: Object containing the 'result' of the exponentiation.
+    """
     print("CALLED: power(PowerInput) -> PowerOutput")
     return PowerOutput(result=input.a ** input.b)
 
 @mcp.tool()
 def cbrt(input: CbrtInput) -> CbrtOutput:
-    """Compute the cube root of a number. """
+    """
+    Computes the cube root of a number.
+
+    Args:
+        input (CbrtInput): Object containing 'a', the number to compute the cube root of.
+
+    Returns:
+        CbrtOutput: Object containing the 'result' (cube root).
+    """
     print("CALLED: cbrt(CbrtInput) -> CbrtOutput")
     return CbrtOutput(result=input.a ** (1/3))
 
 @mcp.tool()
 def factorial(input: FactorialInput) -> FactorialOutput:
-    """Compute the factorial of a number. """
+    """
+    Computes the factorial of a non-negative integer.
+
+    Args:
+        input (FactorialInput): Object containing 'a', the number to compute the factorial of.
+
+    Returns:
+        FactorialOutput: Object containing the 'result' (factorial).
+    """
     print("CALLED: factorial(FactorialInput) -> FactorialOutput")
     return FactorialOutput(result=math.factorial(input.a))
 
 @mcp.tool()
 def remainder(input: RemainderInput) -> RemainderOutput:
-    """Compute the remainder of a divided by b. """
+    """
+    Computes the remainder of the division of the first number by the second.
+
+    Args:
+        input (RemainderInput): Object containing 'a' (dividend) and 'b' (divisor).
+
+    Returns:
+        RemainderOutput: Object containing the 'result' (remainder).
+    """
     print("CALLED: remainder(RemainderInput) -> RemainderOutput")
     return RemainderOutput(result=input.a % input.b)
 
 @mcp.tool()
 def sin(input: SinInput) -> SinOutput:
-    """Compute sine of an angle in radians. """
+    """
+    Computes the sine of an angle (in radians).
+
+    Args:
+        input (SinInput): Object containing 'a', the angle in radians.
+
+    Returns:
+        SinOutput: Object containing the 'result' (sine value).
+    """
     print("CALLED: sin(SinInput) -> SinOutput")
     return SinOutput(result=math.sin(input.a))
 
 @mcp.tool()
 def cos(input: CosInput) -> CosOutput:
-    """Compute cosine of an angle in radians. """
+    """
+    Computes the cosine of an angle (in radians).
+
+    Args:
+        input (CosInput): Object containing 'a', the angle in radians.
+
+    Returns:
+        CosOutput: Object containing the 'result' (cosine value).
+    """
     print("CALLED: cos(CosInput) -> CosOutput")
     return CosOutput(result=math.cos(input.a))
 
 @mcp.tool()
 def tan(input: TanInput) -> TanOutput:
-    """Compute tangent of an angle in radians. """
+    """
+    Computes the tangent of an angle (in radians).
+
+    Args:
+        input (TanInput): Object containing 'a', the angle in radians.
+
+    Returns:
+        TanOutput: Object containing the 'result' (tangent value).
+    """
     print("CALLED: tan(TanInput) -> TanOutput")
     return TanOutput(result=math.tan(input.a))
 
 @mcp.tool()
 def mine(input: MineInput) -> MineOutput:
-    """Special mining tool. """
+    """
+    Performs a special mining operation (a - b - b).
+
+    Args:
+        input (MineInput): Object containing 'a' and 'b'.
+
+    Returns:
+        MineOutput: Object containing the 'result'.
+    """
     print("CALLED: mine(MineInput) -> MineOutput")
     return MineOutput(result=input.a - input.b - input.b)
 
 @mcp.tool()
 def create_thumbnail(input: CreateThumbnailInput) -> ImageOutput:
-    """Create a 100x100 thumbnail from image. """
+    """
+    Creates a 100x100 thumbnail from an image file.
+
+    Args:
+        input (CreateThumbnailInput): Object containing 'image_path', the path to the image.
+
+    Returns:
+        ImageOutput: Object containing the thumbnail 'data' (bytes) and 'format' ("png").
+    """
     print("CALLED: create_thumbnail(CreateThumbnailInput) -> ImageOutput")
     img = PILImage.open(input.image_path)
     img.thumbnail((100, 100))
@@ -125,7 +229,15 @@ def create_thumbnail(input: CreateThumbnailInput) -> ImageOutput:
 
 @mcp.tool()
 def strings_to_chars_to_int(input: StringsToIntsInput) -> StringsToIntsOutput:
-    """Convert characters to ASCII values. """
+    """
+    Converts a string into a list of ASCII integer values.
+
+    Args:
+        input (StringsToIntsInput): Object containing 'string', the input string.
+
+    Returns:
+        StringsToIntsOutput: Object containing 'ascii_values', a list of integers.
+    """
     print("CALLED: strings_to_chars_to_int(StringsToIntsInput) -> StringsToIntsOutput")
     ascii_values = [ord(char) for char in input.string]
     return StringsToIntsOutput(ascii_values=ascii_values)
@@ -134,14 +246,30 @@ def strings_to_chars_to_int(input: StringsToIntsInput) -> StringsToIntsOutput:
 
 @mcp.tool()
 def int_list_to_exponential_sum(input: ExpSumInput) -> ExpSumOutput:
-    """Sum exponentials of int list. """
+    """
+    Calculates the sum of the exponentials of a list of integers.
+
+    Args:
+        input (ExpSumInput): Object containing 'numbers', a list of integers.
+
+    Returns:
+        ExpSumOutput: Object containing 'result', the sum of exponentials.
+    """
     print("CALLED: int_list_to_exponential_sum(ExpSumInput) -> ExpSumOutput")
     result = sum(math.exp(i) for i in input.numbers)
     return ExpSumOutput(result=result)
 
 @mcp.tool()
 def fibonacci_numbers(input: FibonacciInput) -> FibonacciOutput:
-    """Generate first n Fibonacci numbers. """
+    """
+    Generates the first n Fibonacci numbers.
+
+    Args:
+        input (FibonacciInput): Object containing 'n', the count of Fibonacci numbers to generate.
+
+    Returns:
+        FibonacciOutput: Object containing 'result', a list of Fibonacci numbers.
+    """
     print("CALLED: fibonacci_numbers(FibonacciInput) -> FibonacciOutput")
     n = input.n
     if n <= 0:
@@ -211,7 +339,15 @@ def fibonacci_numbers(input: FibonacciInput) -> FibonacciOutput:
 
 @mcp.resource("greeting://{name}")
 def get_greeting(name: str) -> str:
-    """Get a personalized greeting. """
+    """
+    Generates a personalized greeting resource.
+
+    Args:
+        name (str): The name to include in the greeting.
+
+    Returns:
+        str: A greeting string.
+    """
     print("CALLED: get_greeting(name: str) -> str")
     return f"Hello, {name}!"
 
@@ -219,12 +355,28 @@ def get_greeting(name: str) -> str:
 
 @mcp.prompt()
 def review_code(code: str) -> str:
-    """Ask to review a code snippet. """
+    """
+    Creates a prompt to ask the assistant to review code.
+
+    Args:
+        code (str): The code snippet to review.
+
+    Returns:
+        str: The prompt string.
+    """
     return f"Please review this code:\n\n{code}"
 
 @mcp.prompt()
 def debug_error(error: str) -> list:
-    """Help debug an error. """
+    """
+    Creates a prompt to help debug an error.
+
+    Args:
+        error (str): The error message to debug.
+
+    Returns:
+        list: A list of message objects representing the conversation starter.
+    """
     return [
         base.UserMessage("I'm seeing this error:"),
         base.UserMessage(error),

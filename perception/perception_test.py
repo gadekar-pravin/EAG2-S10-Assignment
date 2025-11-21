@@ -2,6 +2,9 @@ from perception import Perception
 import asyncio
 
 def test_perception():
+    """
+    Tests the Perception module by running a sample input.
+    """
     perception = Perception()
     result = perception.run(
         prompt_path="prompts/perception_prompt.txt",

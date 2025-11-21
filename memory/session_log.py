@@ -7,6 +7,13 @@ def get_store_path(session_id: str, base_dir: str = "memory/session_logs") -> Pa
     """
     Construct the full path to the session file based on current date and session ID.
     Format: memory/session_logs/YYYY/MM/DD/<session_id>.json
+
+    Args:
+        session_id (str): The unique identifier for the session.
+        base_dir (str): The base directory for session logs.
+
+    Returns:
+        Path: The full path to the session log file.
     """
     now = datetime.now()
     day_dir = Path(base_dir) / str(now.year) / f"{now.month:02d}" / f"{now.day:02d}"
@@ -18,6 +25,12 @@ def get_store_path(session_id: str, base_dir: str = "memory/session_logs") -> Pa
 def simplify_session_id(session_id: str) -> str:
     """
     Return the simplified (short) version of the session ID for display/logging.
+
+    Args:
+        session_id (str): The full session ID.
+
+    Returns:
+        str: The simplified session ID.
     """
     return session_id.split("-")[0]
 
@@ -26,6 +39,10 @@ def append_session_to_store(session_obj, base_dir: str = "memory/session_logs") 
     """
     Save the session object as a standalone file. If a file already exists and is corrupt,
     it will be overwritten with fresh data.
+
+    Args:
+        session_obj (AgentSession): The session object to store.
+        base_dir (str): The base directory for storage.
     """
     session_data = session_obj.to_json()
     session_data["_session_id_short"] = simplify_session_id(session_data["session_id"])
@@ -51,6 +68,10 @@ def live_update_session(session_obj, base_dir: str = "memory/session_logs") -> N
     """
     Update (or overwrite) the session file with latest data.
     In per-file format, this is identical to append.
+
+    Args:
+        session_obj (AgentSession): The session object to update.
+        base_dir (str): The base directory for storage.
     """
     try:
         append_session_to_store(session_obj, base_dir)

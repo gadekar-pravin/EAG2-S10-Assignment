@@ -6,10 +6,23 @@ import json
 
 @dataclass
 class ToolCode:
+    """
+    Represents code execution involving a specific tool.
+
+    Attributes:
+        tool_name (str): The name of the tool to be executed.
+        tool_arguments (dict[str, Any]): A dictionary of arguments for the tool.
+    """
     tool_name: str
     tool_arguments: dict[str, Any]
 
     def to_dict(self):
+        """
+        Converts the ToolCode instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the ToolCode instance.
+        """
         return {
             "tool_name": self.tool_name,
             "tool_arguments": self.tool_arguments
@@ -18,6 +31,20 @@ class ToolCode:
 
 @dataclass
 class PerceptionSnapshot:
+    """
+    Snapshot of the agent's perception at a specific point in time.
+
+    Attributes:
+        entities (list[str]): List of entities identified in the context.
+        result_requirement (str): The requirement for the result.
+        original_goal_achieved (bool): Whether the original user goal has been achieved.
+        reasoning (str): Reasoning behind the current perception.
+        local_goal_achieved (bool): Whether the local/immediate goal has been achieved.
+        local_reasoning (str): Reasoning specific to the local goal.
+        last_tooluse_summary (str): Summary of the last tool usage.
+        solution_summary (str): Summary of the proposed solution.
+        confidence (str): Confidence level in the current perception.
+    """
     entities: list[str]
     result_requirement: str
     original_goal_achieved: bool
@@ -30,6 +57,23 @@ class PerceptionSnapshot:
 
 @dataclass
 class Step:
+    """
+    Represents a single step in the agent's plan.
+
+    Attributes:
+        index (int): The index of the step in the plan.
+        description (str): A description of what the step involves.
+        type (Literal["CODE", "CONCLUDE", "NOOP"]): The type of step (code execution, conclusion, or no-op).
+        code (Optional[ToolCode]): The tool code to execute, if applicable.
+        conclusion (Optional[str]): The conclusion reached, if applicable.
+        execution_result (Optional[str]): The result of the execution.
+        error (Optional[str]): Any error encountered during execution.
+        perception (Optional[PerceptionSnapshot]): The perception snapshot after the step.
+        status (Literal["pending", "completed", "failed", "skipped"]): The current status of the step.
+        attempts (int): Number of attempts made for this step.
+        was_replanned (bool): Whether this step was a result of replanning.
+        parent_index (Optional[int]): The index of the parent step, if replanned.
+    """
     index: int
     description: str
     type: Literal["CODE", "CONCLUDE", "NOOP"]
@@ -44,6 +88,12 @@ class Step:
     parent_index: Optional[int] = None
 
     def to_dict(self):
+        """
+        Converts the Step instance to a dictionary.
+
+        Returns:
+            dict: A dictionary representation of the Step instance.
+        """
         return {
             "index": self.index,
             "description": self.description,
@@ -61,7 +111,25 @@ class Step:
 
 
 class AgentSession:
+    """
+    Manages the session state for an agent execution.
+
+    Attributes:
+        session_id (str): Unique identifier for the session.
+        original_query (str): The initial user query.
+        perception (Optional[PerceptionSnapshot]): The most recent perception snapshot.
+        plan_versions (list[dict[str, Any]]): History of plan versions generated during the session.
+        state (dict): Current state summary including goal achievement and final answer.
+    """
+
     def __init__(self, session_id: str, original_query: str):
+        """
+        Initialize a new AgentSession.
+
+        Args:
+            session_id (str): The unique ID for this session.
+            original_query (str): The user's original query.
+        """
         self.session_id = session_id
         self.original_query = original_query
         self.perception: Optional[PerceptionSnapshot] = None
@@ -72,13 +140,29 @@ class AgentSession:
             "confidence": 0.0,
             "reasoning_note": "",
             "solution_summary": ""
-            
+
         }
 
     def add_perception(self, snapshot: PerceptionSnapshot):
+        """
+        Updates the current perception snapshot of the session.
+
+        Args:
+            snapshot (PerceptionSnapshot): The new perception snapshot.
+        """
         self.perception = snapshot
 
     def add_plan_version(self, plan_texts: list[str], steps: list[Step]):
+        """
+        Adds a new version of the plan to the session history.
+
+        Args:
+            plan_texts (list[str]): Textual descriptions of the plan steps.
+            steps (list[Step]): List of Step objects corresponding to the plan.
+
+        Returns:
+            Step: The first step of the new plan, or None if empty.
+        """
         plan = {
             "plan_text": plan_texts,
             "steps": steps.copy()
@@ -87,10 +171,22 @@ class AgentSession:
         return steps[0] if steps else None  # ✅ fix: return first Step
 
     def get_next_step_index(self) -> int:
+        """
+        Calculates the next global step index based on all previous plan versions.
+
+        Returns:
+            int: The cumulative count of steps across all plan versions.
+        """
         return sum(len(v["steps"]) for v in self.plan_versions)
 
 
     def to_json(self):
+        """
+        Serializes the entire session state to a JSON-compatible dictionary.
+
+        Returns:
+            dict: A dictionary representing the full session state.
+        """
         return {
             "session_id": self.session_id,
             "original_query": self.original_query,
@@ -105,6 +201,12 @@ class AgentSession:
         }
 
     def get_snapshot_summary(self):
+        """
+        Generates a summary of the current session state.
+
+        Returns:
+            dict: A dictionary containing key session metrics and the final plan.
+        """
         return {
             "session_id": self.session_id,
             "query": self.original_query,
@@ -121,6 +223,14 @@ class AgentSession:
         }
 
     def mark_complete(self, perception: PerceptionSnapshot, final_answer: Optional[str] = None, fallback_confidence: float = 0.95):
+        """
+        Marks the session as complete and updates the final state.
+
+        Args:
+            perception (PerceptionSnapshot): The final perception snapshot.
+            final_answer (Optional[str]): The final answer string (overrides perception if provided).
+            fallback_confidence (float): Default confidence if perception lacks one.
+        """
         self.state.update({
             "original_goal_achieved": perception.original_goal_achieved,
             "final_answer": final_answer or perception.solution_summary,
@@ -132,6 +242,12 @@ class AgentSession:
 
 
     def simulate_live(self, delay: float = 1.2):
+        """
+        Simulates a live replay of the agent session trace to the console.
+
+        Args:
+            delay (float): The delay in seconds between printing steps.
+        """
         print("\n=== LIVE AGENT SESSION TRACE ===")
         print(f"Session ID: {self.session_id}")
         print(f"Query: {self.original_query}")

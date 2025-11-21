@@ -11,13 +11,40 @@ from mcp_servers.multiMCP import MultiMCP
 
 
 class AgentLoop:
+    """
+    Manages the main execution loop of the agent, coordinating perception, decision-making, and action execution.
+    """
     def __init__(self, perception_prompt_path: str, decision_prompt_path: str, multi_mcp: MultiMCP, strategy: str = "exploratory"):
+        """
+        Initialize the AgentLoop.
+
+        Args:
+            perception_prompt_path (str): Path to the perception prompt file.
+            decision_prompt_path (str): Path to the decision prompt file.
+            multi_mcp (MultiMCP): Instance of MultiMCP for tool execution.
+            strategy (str): The planning strategy to use (default: "exploratory").
+        """
         self.perception = Perception(perception_prompt_path)
         self.decision = Decision(decision_prompt_path, multi_mcp)
         self.strategy = strategy
         self.multi_mcp = multi_mcp
 
     async def run(self, query: str):
+        """
+        Runs the agent loop for a given query.
+
+        This method orchestrates the entire agent lifecycle:
+        1. Memory search for similar past queries.
+        2. Initial perception to understand the query.
+        3. Decision making to form a plan.
+        4. Iterative execution of plan steps, including replanning on failure.
+
+        Args:
+            query (str): The user's input query.
+
+        Returns:
+            AgentSession: The final state of the agent session.
+        """
         session = AgentSession(session_id=str(uuid.uuid4()), original_query=query)
         print(f"\n=== LIVE AGENT SESSION TRACE ===")
         print(f"Session ID: {session.session_id}")
@@ -42,8 +69,8 @@ class AgentLoop:
 
         # ── Step 0: Perception ───────────────────────────────
         perception_input = self.perception.build_perception_input(
-                        raw_input = query, 
-                        memory = results, 
+                        raw_input = query,
+                        memory = results,
                         snapshot_type="user_query")
         perception_result = self.perception.run(perception_input)
 
@@ -119,9 +146,9 @@ class AgentLoop:
                 step_obj.status = "completed"
 
                 perception_input = self.perception.build_perception_input(
-                                raw_input=executor_response.get('result', 'Tool Failed'), 
-                                memory = [], 
-                                current_plan = session.plan_versions[-1]["plan_text"], 
+                                raw_input=executor_response.get('result', 'Tool Failed'),
+                                memory = [],
+                                current_plan = session.plan_versions[-1]["plan_text"],
                                 snapshot_type="step_result")
                 perception_result = self.perception.run(perception_input)
 
@@ -232,9 +259,9 @@ class AgentLoop:
 
                 # 🧠 Run perception on conclusion text
                 perception_input = self.perception.build_perception_input(
-                                raw_input=step_obj.conclusion, 
-                                memory = [], 
-                                current_plan = session.plan_versions[-1]["plan_text"], 
+                                raw_input=step_obj.conclusion,
+                                memory = [],
+                                current_plan = session.plan_versions[-1]["plan_text"],
                                 snapshot_type="step_result")
                 perception_result = self.perception.run(perception_input)
                 # Not ready yet?

@@ -42,16 +42,43 @@ ROOT = Path(__file__).parent.resolve()
 
 
 def get_embedding(text: str) -> np.ndarray:
+    """
+    Fetches the vector embedding for a given text using the configured embedding model.
+
+    Args:
+        text (str): The text to embed.
+
+    Returns:
+        np.ndarray: The embedding vector as a numpy array.
+    """
     result = requests.post(EMBED_URL, json={"model": EMBED_MODEL, "prompt": text})
     result.raise_for_status()
     return np.array(result.json()["embedding"], dtype=np.float32)
 
 def chunk_text(text, size=CHUNK_SIZE, overlap=CHUNK_OVERLAP):
+    """
+    Splits text into overlapping chunks of words.
+
+    Args:
+        text (str): The text to chunk.
+        size (int): The number of words per chunk.
+        overlap (int): The number of words to overlap between chunks.
+
+    Yields:
+        str: A chunk of text.
+    """
     words = text.split()
     for i in range(0, len(words), size - overlap):
         yield " ".join(words[i:i+size])
 
 def mcp_log(level: str, message: str) -> None:
+    """
+    Logs a message to stderr with a specified log level.
+
+    Args:
+        level (str): The severity level of the log (e.g., "INFO", "ERROR").
+        message (str): The message to log.
+    """
     sys.stderr.write(f"{level}: {message}\n")
     sys.stderr.flush()
 
@@ -62,6 +89,17 @@ def mcp_log(level: str, message: str) -> None:
 
 
 def are_related(chunk1: str, chunk2: str, index: int) -> bool:
+    """
+    Determines if two text chunks are semantically related using an LLM.
+
+    Args:
+        chunk1 (str): The first text chunk.
+        chunk2 (str): The second text chunk.
+        index (int): The index of the chunk for logging purposes.
+
+    Returns:
+        bool: True if the chunks are related, False otherwise.
+    """
     prompt = f"""
 You are helping to segment a document into topic-based chunks. Unfortunately, the sentences are mixed up.
 
@@ -70,12 +108,12 @@ CHUNK 2: "{chunk2}"
 
 Should these two chunks appear in the **same paragraph or flow of writing**?
 
-Even if the subject changes slightly (e.g., One person to another), treat them as related **if they belong to the same broader context or topic** (like cricket, AI, or real estate). 
+Even if the subject changes slightly (e.g., One person to another), treat them as related **if they belong to the same broader context or topic** (like cricket, AI, or real estate).
 
 Also consider cues like continuity words (e.g., "However", "But", "Also") or references that link the sentences.
 
 Answer with:
-Yes – if the chunks should appear together in the same paragraph or section  
+Yes – if the chunks should appear together in the same paragraph or section
 No – if they are about different topics and should be separated
 
 Just respond in one word (Yes or No), and do not provide any further explanation.
@@ -98,7 +136,15 @@ Just respond in one word (Yes or No), and do not provide any further explanation
 
 @mcp.tool()
 def search_stored_documents_rag(input: SearchDocumentsInput) -> list[str]:
-    """Search old stored documents like PDF, DOCX, TXT, etc. to get relevant extracts. """
+    """
+    Searches stored documents (PDF, DOCX, TXT, etc.) using RAG to retrieve relevant extracts.
+
+    Args:
+        input (SearchDocumentsInput): Object containing the 'query' string.
+
+    Returns:
+        list[str]: A list of relevant text chunks with source metadata.
+    """
 
     ensure_faiss_ready()
     query = input.query
@@ -118,6 +164,15 @@ def search_stored_documents_rag(input: SearchDocumentsInput) -> list[str]:
 
 
 def caption_image(img_url_or_path: str) -> str:
+    """
+    Generates a caption for an image using an LLM.
+
+    Args:
+        img_url_or_path (str): URL or local path to the image.
+
+    Returns:
+        str: The generated caption or error message.
+    """
     mcp_log("CAPTION", f"🖼️ Attempting to caption image: {img_url_or_path}")
 
     full_path = Path(__file__).parent / "documents" / img_url_or_path
@@ -168,6 +223,15 @@ def caption_image(img_url_or_path: str) -> str:
 
 
 def replace_images_with_captions(markdown: str) -> str:
+    """
+    Replaces image links in Markdown with generated captions.
+
+    Args:
+        markdown (str): The Markdown text containing image links.
+
+    Returns:
+        str: The Markdown text with images replaced by captions.
+    """
     def replace(match):
         alt, src = match.group(1), match.group(2)
         try:
@@ -188,7 +252,15 @@ def replace_images_with_captions(markdown: str) -> str:
 
 @mcp.tool()
 def convert_webpage_url_into_markdown(input: UrlInput) -> MarkdownOutput:
-    """Return clean webpage content without Ads, and clutter. """
+    """
+    Converts a webpage URL into clean Markdown content, removing ads and clutter.
+
+    Args:
+        input (UrlInput): Object containing 'url', the URL of the webpage.
+
+    Returns:
+        MarkdownOutput: Object containing the 'markdown' content.
+    """
 
     downloaded = trafilatura.fetch_url(input.url)
     if not downloaded:
@@ -207,7 +279,15 @@ def convert_webpage_url_into_markdown(input: UrlInput) -> MarkdownOutput:
 
 @mcp.tool()
 def extract_pdf(input: FilePathInput) -> MarkdownOutput:
-    """Convert PDF to markdown. """
+    """
+    Converts a PDF file to Markdown, extracting text and handling images.
+
+    Args:
+        input (FilePathInput): Object containing 'file_path', the path to the PDF.
+
+    Returns:
+        MarkdownOutput: Object containing the 'markdown' content.
+    """
 
 
     if not os.path.exists(input.file_path):
@@ -236,7 +316,15 @@ def extract_pdf(input: FilePathInput) -> MarkdownOutput:
 
 
 def semantic_merge(text: str) -> list[str]:
-    """Splits text semantically using LLM: detects second topic and reuses leftover intelligently."""
+    """
+    Splits text semantically into chunks using an LLM to detect topic transitions.
+
+    Args:
+        text (str): The text to split.
+
+    Returns:
+        list[str]: A list of semantic text chunks.
+    """
     WORD_LIMIT = 512
     words = text.split()
     i = 0
@@ -306,7 +394,10 @@ Keep markdown formatting intact.
 
 
 def process_documents():
-    """Process documents and create FAISS index using unified multimodal strategy."""
+    """
+    Processes documents in the 'documents' directory and updates the FAISS index.
+    Handles PDFs, HTML, and other formats, extracting text and creating embeddings.
+    """
     mcp_log("INFO", "Indexing documents with unified RAG pipeline...")
     ROOT = Path(__file__).parent.resolve()
     DOC_PATH = ROOT / "documents"
@@ -391,6 +482,9 @@ def process_documents():
 
 
 def ensure_faiss_ready():
+    """
+    Ensures that the FAISS index exists; if not, triggers document processing to create it.
+    """
     from pathlib import Path
     index_path = ROOT / "faiss_index" / "index.bin"
     meta_path = ROOT / "faiss_index" / "metadata.json"
@@ -412,13 +506,13 @@ if __name__ == "__main__":
         server_thread = threading.Thread(target=lambda: mcp.run(transport="stdio"))
         server_thread.daemon = True
         server_thread.start()
-        
+
         # Wait a moment for the server to start
         time.sleep(2)
-        
+
         # Process documents after server is running
         process_documents()
-        
+
         # Keep the main thread alive
         try:
             while True:
